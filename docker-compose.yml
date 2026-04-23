@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: migraine-db
+    restart: always
+    environment:
+      POSTGRES_DB: migraine_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend/MigraineForecast.API
+      dockerfile: Dockerfile
+    container_name: migraine-backend
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=migraine_db;Username=postgres;Password=password
+    ports:
+      - "5000:8080"
+
+  frontend:
+    build:
+      context: ./frontend/migraine-frontend
+    container_name: migraine_frontend
+    ports:
+      - "5173:80" # Mapira tvoj lokalni 5173 na Nginx port 80
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

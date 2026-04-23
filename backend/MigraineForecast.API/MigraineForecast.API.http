@@ -1,0 +1,6 @@
+@MigraineForecast.API_HostAddress = http://localhost:5144
+
+GET {{MigraineForecast.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
