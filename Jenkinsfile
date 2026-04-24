@@ -32,17 +32,18 @@ pipeline {
                 unset DOCKER_CERT_PATH
                 unset DOCKER_CONTEXT
 
-                docker run --rm \
-                -v $WORKSPACE:/app \
-                -w /app/backend \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet restore MigraineForecast.API.sln
+                echo "DEBUG: listing files"
+                ls -l $WORKSPACE/backend
 
                 docker run --rm \
                 -v $WORKSPACE:/app \
-                -w /app/backend \
                 mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet build MigraineForecast.API.sln -c Release
+                dotnet restore /app/backend/MigraineForecast.API.sln
+
+                docker run --rm \
+                -v $WORKSPACE:/app \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet build /app/backend/MigraineForecast.API.sln -c Release
                 '''
             }
         }
