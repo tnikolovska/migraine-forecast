@@ -22,6 +22,7 @@ pipeline {
             }
         }
 
+
                 stage('Build') {
                 steps {
                     sh '''
@@ -36,7 +37,7 @@ pipeline {
                     '''
                 }
             }
-            
+
         stage('Docker Build') {
             steps {
                 sh '''
