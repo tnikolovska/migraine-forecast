@@ -51,7 +51,7 @@ pipeline {
 	    steps{
             script {
             	// host.docker.internal on port 5000 is the magic for Docker Desktop
-            	def registry = "host.docker.internal:5000"
+            	def registry = "host.docker.internal:5001"
 		sh "docker login -u admin -p Securityobjectives1! ${registry}"
             	sh "docker tag migraineapi-app:${BUILD_NUMBER} ${registry}/migraineapi-app:${BUILD_NUMBER}"
             	sh "docker push ${registry}/migraineapi-app:${BUILD_NUMBER}"
