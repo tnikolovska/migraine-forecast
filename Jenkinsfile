@@ -16,12 +16,40 @@ pipeline {
             }
         }*/
 
-        stage('Build') {
+       /* stage('Build') {
                 steps {
                     sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore"
                     sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release"
                 }
+            }*/
+
+        stage('Build') {
+            steps {
+                sh '''
+                    unset DOCKER_HOST
+                    unset DOCKER_TLS_VERIFY
+                    unset DOCKER_CERT_PATH
+
+                    docker run --rm \
+                    -v $WORKSPACE:/app \
+                    -w /app \
+                    mcr.microsoft.com/dotnet/sdk:9.0 \
+                    dotnet restore
+                '''
+
+                sh '''
+                    unset DOCKER_HOST
+                    unset DOCKER_TLS_VERIFY
+                    unset DOCKER_CERT_PATH
+
+                    docker run --rm \
+                    -v $WORKSPACE:/app \
+                    -w /app \
+                    mcr.microsoft.com/dotnet/sdk:9.0 \
+                    dotnet build --configuration Release
+                '''
             }
+        }
 
         stage('Docker Build') {
             steps {
