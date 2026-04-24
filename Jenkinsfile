@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+       stage('Build') {
             steps {
                 sh '''
                 #!/bin/bash
@@ -34,16 +34,16 @@ pipeline {
                 unset DOCKER_CONTEXT
 
                 docker run --rm \
-                  -v $WORKSPACE:/app \
-                  -w /app/backend \
-                  mcr.microsoft.com/dotnet/sdk:9.0 \
-                  dotnet restore
+                -v $WORKSPACE:/app \
+                -w /app/backend \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet restore MigraineForecast.API.sln
 
                 docker run --rm \
-                  -v $WORKSPACE:/app \
-                  -w /app/backend \
-                  mcr.microsoft.com/dotnet/sdk:9.0 \
-                  dotnet build -c Release
+                -v $WORKSPACE:/app \
+                -w /app/backend \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet build MigraineForecast.API.sln -c Release
                 '''
             }
         }
