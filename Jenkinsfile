@@ -22,25 +22,21 @@ pipeline {
             }
         }
 
-       stage('Build') {
-    steps {
-        sh '''
-        set -e
+                stage('Build') {
+                steps {
+                    sh '''
+                    set -e
 
-        docker run --rm \
-          -v $WORKSPACE:/src \
-          -w /src/backend \
-          mcr.microsoft.com/dotnet/sdk:9.0 \
-          dotnet restore MigraineForecast.API.sln
+                    ls -R
 
-        docker run --rm \
-          -v $WORKSPACE:/src \
-          -w /src/backend \
-          mcr.microsoft.com/dotnet/sdk:9.0 \
-          dotnet build MigraineForecast.API.sln -c Release
-        '''
-    }
-}
+                    cd backend
+
+                    dotnet restore MigraineForecast.API.sln
+                    dotnet build MigraineForecast.API.sln -c Release
+                    '''
+                }
+            }
+            
         stage('Docker Build') {
             steps {
                 sh '''
