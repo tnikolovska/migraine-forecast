@@ -16,7 +16,7 @@ pipeline {
             }
         }*/
 
-        sstage('Build') {
+        stage('Build') {
                 steps {
                     sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore"
                     sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release"
