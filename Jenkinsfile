@@ -1,17 +1,22 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "migraineapi-app"
+        REGISTRY = "host.docker.internal:5001"
+    }
+
     stages {
 
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+            }
         }
 
         stage('Debug Docker') {
             steps {
                 sh '''
-                #!/bin/bash
-
                 unset DOCKER_HOST
                 unset DOCKER_TLS_VERIFY
                 unset DOCKER_CERT_PATH
@@ -22,35 +27,37 @@ pipeline {
             }
         }
 
+        stage('Build (.NET)') {
+            steps {
+                sh '''
+                docker run --rm \
+                  -v $WORKSPACE:/src \
+                  -w /src/backend/MigraineForecast.API \
+                  mcr.microsoft.com/dotnet/sdk:9.0 \
+                  dotnet restore
 
-        
-                stage('Build') {
-                steps {
-                    sh '''
-                    set -e
-
-                    ls -R
-
-                    cd backend
-
-                    dotnet restore MigraineForecast.API.sln
-                    dotnet build MigraineForecast.API.sln -c Release
-                    '''
-                }
+                docker run --rm \
+                  -v $WORKSPACE:/src \
+                  -w /src/backend/MigraineForecast.API \
+                  mcr.microsoft.com/dotnet/sdk:9.0 \
+                  dotnet build -c Release
+                '''
             }
+        }
 
         stage('Docker Build') {
             steps {
                 sh '''
-                #!/bin/bash
-
                 unset DOCKER_HOST
                 unset DOCKER_TLS_VERIFY
                 unset DOCKER_CERT_PATH
                 unset DOCKER_CONTEXT
 
                 docker rm -f migraineapi-app-container || true
-                docker build -t migraineapi-app:${BUILD_NUMBER} .
+
+                docker build \
+                  -t ${IMAGE_NAME}:${BUILD_NUMBER} \
+                  backend/MigraineForecast.API
                 '''
             }
         }
@@ -58,14 +65,11 @@ pipeline {
         stage('Run Services') {
             steps {
                 sh '''
-                #!/bin/bash
+                docker run -d \
+                  --name migraineapi-app-container \
+                  -p 5050:80 \
+                  ${IMAGE_NAME}:${BUILD_NUMBER}
 
-                unset DOCKER_HOST
-                unset DOCKER_TLS_VERIFY
-                unset DOCKER_CERT_PATH
-                unset DOCKER_CONTEXT
-
-                docker run -d --name migraineapi-app-container -p 5050:80 migraineapi-app:${BUILD_NUMBER}
                 sleep 10
                 '''
             }
@@ -74,17 +78,11 @@ pipeline {
         stage('Integration Tests') {
             steps {
                 sh '''
-                unset DOCKER_HOST
-                unset DOCKER_TLS_VERIFY
-                unset DOCKER_CERT_PATH
-                unset DOCKER_CONTEXT
-
                 docker run --rm \
-                --network host \
-                -v $WORKSPACE:/app \
-                -w /app/backend \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet test MigraineForecast.API.sln -c Release
+                  -v $WORKSPACE:/app \
+                  -w /app/backend/MigraineForecast.API \
+                  mcr.microsoft.com/dotnet/sdk:9.0 \
+                  dotnet test ../../MigraineForecastAPI.Tests -c Release
                 '''
             }
         }
@@ -92,18 +90,15 @@ pipeline {
         stage('Push to Nexus') {
             steps {
                 sh '''
-                #!/bin/bash
-
-                unset DOCKER_HOST
-                unset DOCKER_TLS_VERIFY
-                unset DOCKER_CERT_PATH
-                unset DOCKER_CONTEXT
-
                 REGISTRY=host.docker.internal:5001
 
-                docker login -u admin -p Securityobjectives1! $REGISTRY
-                docker tag migraineapi-app:${BUILD_NUMBER} $REGISTRY/migraineapi-app:${BUILD_NUMBER}
-                docker push $REGISTRY/migraineapi-app:${BUILD_NUMBER}
+                docker login $REGISTRY -u admin -p Securityobjectives1!
+
+                docker tag ${IMAGE_NAME}:${BUILD_NUMBER} $REGISTRY/${IMAGE_NAME}:${BUILD_NUMBER}
+                docker tag ${IMAGE_NAME}:${BUILD_NUMBER} $REGISTRY/${IMAGE_NAME}:latest
+
+                docker push $REGISTRY/${IMAGE_NAME}:${BUILD_NUMBER}
+                docker push $REGISTRY/${IMAGE_NAME}:latest
                 '''
             }
         }
@@ -112,13 +107,6 @@ pipeline {
     post {
         always {
             sh '''
-            #!/bin/bash
-
-            unset DOCKER_HOST
-            unset DOCKER_TLS_VERIFY
-            unset DOCKER_CERT_PATH
-            unset DOCKER_CONTEXT
-
             docker stop migraineapi-app-container || true
             docker rm migraineapi-app-container || true
             '''
