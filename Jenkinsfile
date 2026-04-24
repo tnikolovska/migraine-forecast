@@ -32,13 +32,13 @@ pipeline {
                 sh '''
                 docker run --rm \
                 -v $WORKSPACE:/src \
-                -w /src/backend/MigraineForecast.API \
+                -w /src/backend \
                 mcr.microsoft.com/dotnet/sdk:9.0 \
                 dotnet restore MigraineForecast.API.sln
 
                 docker run --rm \
                 -v $WORKSPACE:/src \
-                -w /src/backend/MigraineForecast.API \
+                -w /src/backend \
                 mcr.microsoft.com/dotnet/sdk:9.0 \
                 dotnet build MigraineForecast.API.sln -c Release
                 '''
