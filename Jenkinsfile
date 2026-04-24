@@ -50,7 +50,7 @@ pipeline {
         stage('Push to Nexus') {
 	    steps{
             script {
-            	// host.docker.internal on port 5001 is the magic for Docker Desktop
+            	// host.docker.internal on port 5001 is the magic for Docker Desktop, need to recreate the host.docker.internal:5001
             	def registry = "host.docker.internal:5001"
 		sh "docker login -u admin -p Securityobjectives1! ${registry}"
             	sh "docker tag migraineapi-app:${BUILD_NUMBER} ${registry}/migraineapi-app:${BUILD_NUMBER}"
