@@ -16,16 +16,16 @@ pipeline {
             }
         }*/
 
-        stage('Build') {
-            steps {
-                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore'
-                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release'
+        sstage('Build') {
+                steps {
+                    sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore"
+                    sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release"
+                }
             }
-        }
 
         stage('Docker Build') {
             steps {
-                // Now this runs on the main agent (which HAS docker)
+                sh 'docker rm -f migraineapi-app-container || true'
                 sh "docker build -t migraineapi-app:${env.BUILD_NUMBER} ."
             }
         }
