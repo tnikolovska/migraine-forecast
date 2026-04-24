@@ -7,14 +7,21 @@ pipeline {
             steps { checkout scm }
         }
 
-        stage('Build') {
+        /*stage('Build') {
             // Use the SDK image as a 'tool' or wrapper, 
             // but keep the execution on the main agent
             steps {
                 sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore'
                 sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release'
             }
-        }
+        }*/
+
+        stage('Build') {
+                steps {
+                    sh 'dotnet restore'
+                    sh 'dotnet build --configuration Release'
+                }
+            }
 
         stage('Docker Build') {
             steps {
