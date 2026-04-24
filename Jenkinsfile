@@ -25,7 +25,6 @@ pipeline {
        stage('Build') {
             steps {
                 sh '''
-                #!/bin/bash
                 set -e
 
                 unset DOCKER_HOST
@@ -83,19 +82,17 @@ pipeline {
         stage('Integration Tests') {
             steps {
                 sh '''
-                #!/bin/bash
-
                 unset DOCKER_HOST
                 unset DOCKER_TLS_VERIFY
                 unset DOCKER_CERT_PATH
                 unset DOCKER_CONTEXT
 
                 docker run --rm \
-                  --network host \
-                  -v $WORKSPACE:/app \
-                  -w /app/backend \
-                  mcr.microsoft.com/dotnet/sdk:9.0 \
-                  dotnet test -c Release
+                --network host \
+                -v $WORKSPACE:/app \
+                -w /app/backend \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet test MigraineForecast.API.sln -c Release
                 '''
             }
         }
