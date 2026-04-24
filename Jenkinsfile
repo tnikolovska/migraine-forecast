@@ -27,20 +27,20 @@ pipeline {
             }
         }
 
-        stage('Build (.NET)') {
+       stage('Build (.NET)') {
             steps {
                 sh '''
                 docker run --rm \
-                  -v $WORKSPACE:/src \
-                  -w /src/backend/MigraineForecast.API \
-                  mcr.microsoft.com/dotnet/sdk:9.0 \
-                  dotnet restore
+                -v $WORKSPACE:/src \
+                -w /src/backend/MigraineForecast.API \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet restore MigraineForecast.API.sln
 
                 docker run --rm \
-                  -v $WORKSPACE:/src \
-                  -w /src/backend/MigraineForecast.API \
-                  mcr.microsoft.com/dotnet/sdk:9.0 \
-                  dotnet build -c Release
+                -v $WORKSPACE:/src \
+                -w /src/backend/MigraineForecast.API \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet build MigraineForecast.API.sln -c Release
                 '''
             }
         }
