@@ -23,34 +23,28 @@ pipeline {
                 }
             }*/
 
-        stage('Build') {
-            steps {
-                sh '''
+      stage('Build') {
+                steps {
+                    sh '''
                     unset DOCKER_HOST
                     unset DOCKER_TLS_VERIFY
                     unset DOCKER_CERT_PATH
 
                     docker run --rm \
                     -v $WORKSPACE:/app \
-                    -w /app \
+                    -w /app/backend \
                     mcr.microsoft.com/dotnet/sdk:9.0 \
-                    dotnet restore
-                '''
-
-                sh '''
-                    unset DOCKER_HOST
-                    unset DOCKER_TLS_VERIFY
-                    unset DOCKER_CERT_PATH
+                    dotnet restore MigraineForecast.API.sln
 
                     docker run --rm \
                     -v $WORKSPACE:/app \
-                    -w /app \
+                    -w /app/backend \
                     mcr.microsoft.com/dotnet/sdk:9.0 \
-                    dotnet build --configuration Release
-                '''
+                    dotnet build MigraineForecast.API.sln -c Release
+                    '''
+                }
             }
-        }
-
+            
         stage('Docker Build') {
             steps {
                 sh 'docker rm -f migraineapi-app-container || true'
