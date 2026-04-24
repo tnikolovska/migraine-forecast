@@ -23,31 +23,24 @@ pipeline {
         }
 
        stage('Build') {
-            steps {
-                sh '''
-                set -e
+    steps {
+        sh '''
+        set -e
 
-                unset DOCKER_HOST
-                unset DOCKER_TLS_VERIFY
-                unset DOCKER_CERT_PATH
-                unset DOCKER_CONTEXT
+        docker run --rm \
+          -v $WORKSPACE:/src \
+          -w /src/backend \
+          mcr.microsoft.com/dotnet/sdk:9.0 \
+          dotnet restore MigraineForecast.API.sln
 
-                echo "DEBUG: listing files"
-                ls -l $WORKSPACE/backend
-
-                docker run --rm \
-                -v $WORKSPACE:/app \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet restore /app/backend/MigraineForecast.API.sln
-
-                docker run --rm \
-                -v $WORKSPACE:/app \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet build /app/backend/MigraineForecast.API.sln -c Release
-                '''
-            }
-        }
-
+        docker run --rm \
+          -v $WORKSPACE:/src \
+          -w /src/backend \
+          mcr.microsoft.com/dotnet/sdk:9.0 \
+          dotnet build MigraineForecast.API.sln -c Release
+        '''
+    }
+}
         stage('Docker Build') {
             steps {
                 sh '''
