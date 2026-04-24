@@ -17,11 +17,11 @@ pipeline {
         }*/
 
         stage('Build') {
-                steps {
-                    sh 'dotnet restore'
-                    sh 'dotnet build --configuration Release'
-                }
+            steps {
+                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore'
+                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release'
             }
+        }
 
         stage('Docker Build') {
             steps {
