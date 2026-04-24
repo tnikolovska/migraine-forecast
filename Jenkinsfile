@@ -1,87 +1,125 @@
 pipeline {
-    // Run everything on the Jenkins container (which has our Docker mount)
     agent any
 
     stages {
+
         stage('Checkout') {
             steps { checkout scm }
         }
 
-        /*stage('Build') {
-            // Use the SDK image as a 'tool' or wrapper, 
-            // but keep the execution on the main agent
+        stage('Debug Docker') {
             steps {
-                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore'
-                sh 'docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release'
-            }
-        }*/
-
-       /* stage('Build') {
-                steps {
-                    sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet restore"
-                    sh "docker run --rm -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet build --configuration Release"
-                }
-            }*/
-
-      stage('Build') {
-            steps {
-                sh '''
+                sh(script: '''
                 unset DOCKER_HOST
                 unset DOCKER_TLS_VERIFY
                 unset DOCKER_CERT_PATH
+                unset DOCKER_CONTEXT
+
+                docker run --rm hello-world
+                ''', shell: '/bin/bash')
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh(script: '''
+                set -e
+
+                unset DOCKER_HOST
+                unset DOCKER_TLS_VERIFY
+                unset DOCKER_CERT_PATH
+                unset DOCKER_CONTEXT
 
                 docker run --rm \
-                -v $WORKSPACE:/app \
-                -w /app/backend \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet restore
+                  -v $WORKSPACE:/app \
+                  -w /app/backend \
+                  mcr.microsoft.com/dotnet/sdk:9.0 \
+                  dotnet restore
 
                 docker run --rm \
-                -v $WORKSPACE:/app \
-                -w /app/backend \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet build -c Release
-                '''
+                  -v $WORKSPACE:/app \
+                  -w /app/backend \
+                  mcr.microsoft.com/dotnet/sdk:9.0 \
+                  dotnet build -c Release
+                ''', shell: '/bin/bash')
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh 'docker rm -f migraineapi-app-container || true'
-                sh "docker build -t migraineapi-app:${env.BUILD_NUMBER} ."
+                sh(script: '''
+                unset DOCKER_HOST
+                unset DOCKER_TLS_VERIFY
+                unset DOCKER_CERT_PATH
+                unset DOCKER_CONTEXT
+
+                docker rm -f migraineapi-app-container || true
+                docker build -t migraineapi-app:${BUILD_NUMBER} .
+                ''', shell: '/bin/bash')
             }
         }
 
         stage('Run Services') {
             steps {
-                sh 'docker run -d --name migraineapi-app-container -p 5050:80 migraineapi-app:${BUILD_NUMBER}'
-                sh 'sleep 10' 
+                sh(script: '''
+                unset DOCKER_HOST
+                unset DOCKER_TLS_VERIFY
+                unset DOCKER_CERT_PATH
+                unset DOCKER_CONTEXT
+
+                docker run -d --name migraineapi-app-container -p 5050:80 migraineapi-app:${BUILD_NUMBER}
+                sleep 10
+                ''', shell: '/bin/bash')
             }
         }
 
         stage('Integration Tests') {
             steps {
-                // Same logic as Build stage
-                sh 'docker run --rm --network host -v ${WORKSPACE}:/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet test --configuration Release'
+                sh(script: '''
+                unset DOCKER_HOST
+                unset DOCKER_TLS_VERIFY
+                unset DOCKER_CERT_PATH
+                unset DOCKER_CONTEXT
+
+                docker run --rm \
+                  --network host \
+                  -v $WORKSPACE:/app \
+                  -w /app/backend \
+                  mcr.microsoft.com/dotnet/sdk:9.0 \
+                  dotnet test -c Release
+                ''', shell: '/bin/bash')
             }
         }
 
         stage('Push to Nexus') {
             steps {
-                script {
-                    def registry = "host.docker.internal:5001"
-                    sh "docker login -u admin -p Securityobjectives1! ${registry}"
-                    sh "docker tag migraineapi-app:${BUILD_NUMBER} ${registry}/migraineapi-app:${BUILD_NUMBER}"
-                    sh "docker push ${registry}/migraineapi-app:${BUILD_NUMBER}"
-                }
+                sh(script: '''
+                unset DOCKER_HOST
+                unset DOCKER_TLS_VERIFY
+                unset DOCKER_CERT_PATH
+                unset DOCKER_CONTEXT
+
+                REGISTRY=host.docker.internal:5001
+
+                docker login -u admin -p Securityobjectives1! $REGISTRY
+                docker tag migraineapi-app:${BUILD_NUMBER} $REGISTRY/migraineapi-app:${BUILD_NUMBER}
+                docker push $REGISTRY/migraineapi-app:${BUILD_NUMBER}
+                ''', shell: '/bin/bash')
             }
         }
     }
 
     post {
         always {
-            sh 'docker stop migraineapi-app-container || true'
-            sh 'docker rm migraineapi-app-container || true'
+            sh(script: '''
+            unset DOCKER_HOST
+            unset DOCKER_TLS_VERIFY
+            unset DOCKER_CERT_PATH
+            unset DOCKER_CONTEXT
+
+            docker stop migraineapi-app-container || true
+            docker rm migraineapi-app-container || true
+            ''', shell: '/bin/bash')
         }
     }
 }
