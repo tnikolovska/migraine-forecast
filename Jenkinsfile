@@ -81,19 +81,23 @@ pipeline {
         stage('Integration Tests') {
             steps {
                 sh '''
+                echo "WORKSPACE=$WORKSPACE"
+                ls -la $WORKSPACE
+
                 docker run --rm \
-                -v /var/jenkins_home/workspace/migraineapi-multibranch_main:/src \
-                -w /src/backend \
-                mcr.microsoft.com/dotnet/sdk:9.0 \
-                bash -c "
-                    echo 'Root:' && ls -la &&
-                    echo 'Backend:' && ls -la /src/backend &&
-                    echo 'Tests:' && ls -la /src/backend/MigraineForecastAPI.Tests &&
-                    dotnet test /src/backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
-                "
+                    -v $WORKSPACE:$WORKSPACE \
+                    -w $WORKSPACE \
+                    mcr.microsoft.com/dotnet/sdk:9.0 \
+                    bash -c "
+                        echo 'Workspace:' && ls -la &&
+                        echo 'Backend:' && ls -la backend &&
+                        echo 'Tests:' && ls -la backend/MigraineForecastAPI.Tests &&
+                        dotnet test backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
+                    "
                 '''
             }
         }
+        
         stage('Push to Nexus') {
             steps {
                 sh '''
