@@ -27,7 +27,18 @@ pipeline {
             }
         }
 
-      stage('Build (.NET)') {
+        stage('Debug Structure') {
+            steps {
+                sh '''
+                docker run --rm \
+                -v $WORKSPACE:/src \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                bash -c "ls -R /src"
+                '''
+            }
+        }
+
+      /*stage('Build (.NET)') {
         steps {
             sh '''
             docker run --rm -v $WORKSPACE:/src mcr.microsoft.com/dotnet/sdk:9.0 \
@@ -38,6 +49,18 @@ pipeline {
 
             '''
         }
+        }*/
+
+        stage('Build (.NET)') {
+            steps {
+                sh '''
+                docker run --rm \
+                -v $WORKSPACE:/src \
+                -w /src \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                bash -c "dotnet restore && dotnet build -c Release"
+                '''
+            }
         }
 
         stage('Docker Build') {
@@ -77,7 +100,7 @@ pipeline {
                 -v $WORKSPACE:/src \
                 -w /src \
                 mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet test backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
+                bash -c "dotnet test -c Release"
                 '''
             }
         }
