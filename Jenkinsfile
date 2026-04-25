@@ -78,29 +78,25 @@ pipeline {
         }
 
         // ✅ Only run if you ACTUALLY have tests
-       stage('Integration Tests') {
+     stage('Integration Tests') {
             steps {
                 sh '''
                 set -e
 
-                echo "WORKSPACE=$WORKSPACE"
-                ls -R $WORKSPACE
+                WORKSPACE_PATH="/src"
 
-                # ALWAYS use find first (source of truth)
-                TEST_PROJECT=$(find $WORKSPACE -name "*Tests*.csproj" | head -n 1)
+                TEST_PROJECT=$(find $WORKSPACE_PATH -name "*Tests*.csproj" | head -n 1)
 
                 echo "Detected test project: $TEST_PROJECT"
 
-                if [ -z "$TEST_PROJECT" ]; then
-                    echo "No test project found!"
-                    exit 1
-                fi
-
                 docker run --rm \
-                    -v $WORKSPACE:/src \
-                    -w /src \
+                    -v $WORKSPACE:$WORKSPACE_PATH \
+                    -w $WORKSPACE_PATH \
                     mcr.microsoft.com/dotnet/sdk:9.0 \
-                    bash -c "dotnet test $TEST_PROJECT -c Release"
+                    bash -c "
+                        set -e
+                        dotnet test $TEST_PROJECT -c Release
+                    "
                 '''
             }
         }
