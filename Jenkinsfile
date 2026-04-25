@@ -78,25 +78,28 @@ pipeline {
         }
 
         // ✅ Only run if you ACTUALLY have tests
-      stage('Integration Tests') {
-                steps {
-                    sh '''
-                    docker run --rm \
-                    -v $WORKSPACE:/src \
-                    -w /src \
-                    mcr.microsoft.com/dotnet/sdk:9.0 \
-                    bash -c "
-                        echo 'Listing backend folder:'
-                        ls -la /src/backend
+     stage('Integration Tests') {
+            steps {
+                sh '''
+                docker run --rm \
+                -v $WORKSPACE:/src \
+                -w /src \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                bash -c "
+                    echo 'Listing /src:'
+                    ls -la
 
-                        echo 'Listing test project folder:'
-                        ls -la /src/backend/MigraineForecastAPI.Tests
+                    echo 'Listing backend:'
+                    ls -la backend
 
-                        dotnet test /src/backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
-                    "
-                    '''
-                }
+                    echo 'Listing test folder:'
+                    ls -la backend/MigraineForecastAPI.Tests
+
+                    dotnet test backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
+                "
+                '''
             }
+        }
 
         stage('Push to Nexus') {
             steps {
