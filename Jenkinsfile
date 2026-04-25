@@ -85,19 +85,27 @@ pipeline {
                 ls -la $WORKSPACE
 
                 docker run --rm \
-                    -v $WORKSPACE:$WORKSPACE \
-                    -w $WORKSPACE \
+                    -v $WORKSPACE:/src \
+                    -w /src \
                     mcr.microsoft.com/dotnet/sdk:9.0 \
                     bash -c "
-                        echo 'Workspace:' && ls -la &&
-                        echo 'Backend:' && ls -la backend &&
-                        echo 'Tests:' && ls -la backend/MigraineForecastAPI.Tests &&
+                        set -e
+
+                        echo '=== ROOT ==='
+                        ls -la
+
+                        echo '=== BACKEND ==='
+                        ls -la backend || exit 1
+
+                        echo '=== TEST PROJECT ==='
+                        ls -la backend/MigraineForecastAPI.Tests || exit 1
+
                         dotnet test backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
                     "
                 '''
             }
         }
-        
+
         stage('Push to Nexus') {
             steps {
                 sh '''
