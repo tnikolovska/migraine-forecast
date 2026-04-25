@@ -91,17 +91,17 @@ pipeline {
                         set -e
 
                         echo '=== Searching for test project ==='
-                        TEST_PROJECT=\$(find . -name '*Tests*.csproj' | head -n 1)
+                        TEST_PROJECT=\\$(find . -name '*Tests*.csproj' | head -n 1)
 
-                        echo \"Detected test project: \$TEST_PROJECT\"
+                        echo \"Detected test project: \\$TEST_PROJECT\"
 
-                        if [ -z \"\$TEST_PROJECT\" ]; then
+                        if [ -z \"\\$TEST_PROJECT\" ]; then
                             echo 'No test project found. Skipping tests.'
                             exit 0
                         fi
 
                         echo '=== Running tests ==='
-                        dotnet test \$TEST_PROJECT -c Release
+                        dotnet test \\$TEST_PROJECT -c Release
                     "
                 '''
             }
