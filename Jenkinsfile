@@ -78,13 +78,13 @@ pipeline {
         }
 
         // ✅ Only run if you ACTUALLY have tests
-        stage('Integration Tests') {
+       stage('Integration Tests') {
             steps {
                 sh '''
                 docker run --rm \
                 -v $WORKSPACE:/src \
                 mcr.microsoft.com/dotnet/sdk:9.0 \
-                dotnet test /src/backend/MigraineForecast.API.Tests/MigraineForecast.API.Tests.csproj -c Release
+                dotnet test /src/backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
                 '''
             }
         }
