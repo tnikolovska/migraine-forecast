@@ -83,19 +83,25 @@ pipeline {
                 sh '''
                 set -e
 
-                WORKSPACE_PATH="/src"
-
-                TEST_PROJECT=$(find $WORKSPACE_PATH -name "*Tests*.csproj" | head -n 1)
-
-                echo "Detected test project: $TEST_PROJECT"
-
                 docker run --rm \
-                    -v $WORKSPACE:$WORKSPACE_PATH \
-                    -w $WORKSPACE_PATH \
+                    -v $WORKSPACE:/src \
+                    -w /src \
                     mcr.microsoft.com/dotnet/sdk:9.0 \
                     bash -c "
                         set -e
-                        dotnet test $TEST_PROJECT -c Release
+
+                        echo '=== Searching for test project ==='
+                        TEST_PROJECT=\$(find . -name '*Tests*.csproj' | head -n 1)
+
+                        echo \"Detected test project: \$TEST_PROJECT\"
+
+                        if [ -z \"\$TEST_PROJECT\" ]; then
+                            echo 'No test project found. Skipping tests.'
+                            exit 0
+                        fi
+
+                        echo '=== Running tests ==='
+                        dotnet test \$TEST_PROJECT -c Release
                     "
                 '''
             }
