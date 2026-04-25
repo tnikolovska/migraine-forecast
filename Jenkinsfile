@@ -36,6 +36,15 @@ pipeline {
             }
         }
 
+        stage('Find Test Projects') {
+                steps {
+                    sh '''
+                    echo "Searching for test projects..."
+                    find $WORKSPACE -name "*Tests*.csproj"
+                    '''
+                }
+            }
+
         // ❌ REMOVED .NET build (Docker already does it)
 
         stage('Docker Build') {
@@ -75,7 +84,7 @@ pipeline {
                 docker run --rm \
                 -v $WORKSPACE:/src \
                 mcr.microsoft.com/dotnet/sdk:9.0 \
-                bash -c "find /src -name '*Tests*.csproj' && dotnet test /src/backend -c Release || echo 'No tests found'"
+                dotnet test /src/backend/MigraineForecast.API.Tests/MigraineForecast.API.Tests.csproj -c Release
                 '''
             }
         }
