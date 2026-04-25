@@ -38,6 +38,15 @@ pipeline {
             }
         }
 
+        stage('Verify Files') {
+            steps {
+                sh '''
+                echo "Workspace content:"
+                ls -la
+                '''
+            }
+        }
+
       /*stage('Build (.NET)') {
         steps {
             sh '''
