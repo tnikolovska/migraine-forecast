@@ -70,14 +70,14 @@ pipeline {
             }
         }
 
-        stage('Integration Tests') {
+       stage('Integration Tests') {
             steps {
                 sh '''
                 docker run --rm \
-                  -v $WORKSPACE:/app \
-                  -w /app/backend/MigraineForecast.API \
-                  mcr.microsoft.com/dotnet/sdk:9.0 \
-                  dotnet test ../../MigraineForecastAPI.Tests -c Release
+                -v $WORKSPACE:/src \
+                -w /src \
+                mcr.microsoft.com/dotnet/sdk:9.0 \
+                dotnet test backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj -c Release
                 '''
             }
         }
