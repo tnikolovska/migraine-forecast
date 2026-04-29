@@ -81,28 +81,22 @@ pipeline {
      stage('Integration Tests') {
             steps {
                 sh '''
-                set -e
+                    set -e
 
-                docker run --rm \
-                    -v $WORKSPACE:/src \
-                    -w /src \
-                    mcr.microsoft.com/dotnet/sdk:9.0 \
-                    bash -c "
-                        set -e
+                    TEST_PROJECT=$(find . -name "*Tests*.csproj" | head -n 1)
 
-                        echo '=== Searching for test project ==='
-                        TEST_PROJECT=\$(find . -name '*Tests*.csproj' | head -n 1)
+                    echo "Detected test project: $TEST_PROJECT"
 
-                        echo \"Detected test project: \$TEST_PROJECT\"
+                    if [ -z "$TEST_PROJECT" ]; then
+                        echo "No test project found. Failing build."
+                        exit 1
+                    fi
 
-                        if [ -z \"\$TEST_PROJECT\" ]; then
-                            echo 'No test project found. Failing build.'
-                            exit 1
-                        fi
-
-                        echo '=== Running tests ==='
-                        dotnet test \"\$TEST_PROJECT\" -c Release
-                    "
+                    docker run --rm \
+                        -v "$WORKSPACE:/src" \
+                        -w /src \
+                        mcr.microsoft.com/dotnet/sdk:9.0 \
+                        bash -c "dotnet test '$TEST_PROJECT' -c Release"
                 '''
             }
         }
