@@ -77,35 +77,56 @@ pipeline {
             }
         }*/
 
-     stage('Run Services') {
-            steps {
-                sh '''
-                    docker run --rm \
-                    --volumes-from devops-jenkins-1 \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
-                    docker/compose:latest \
-                    down || true
+    stage('Run Services') {
+    steps {
+        sh '''
+            docker rm -f migraine-backend || true
+            docker rm -f migraine-db || true
+            docker rm -f migraine_frontend || true
 
-                    docker run --rm \
-                    --volumes-from devops-jenkins-1 \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
-                    -e IMAGE_NAME=${IMAGE_NAME} \
-                    -e BUILD_NUMBER=${BUILD_NUMBER} \
-                    docker/compose:latest \
-                    up -d
+            docker network create migraine-net || true
 
-                    sleep 10
+            # DB
+            docker run -d \
+              --name migraine-db \
+              --network migraine-net \
+              -e POSTGRES_DB=migraine_db \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_PASSWORD=password \
+              postgres:15
 
-                    echo "=== Running containers ==="
-                    docker ps
+            sleep 5
 
-                    echo "=== API logs ==="
-                    docker logs migraineapi-app-container || true
-                '''
-            }
-        }
+            # Backend
+            docker run -d \
+              --name migraine-backend \
+              --network migraine-net \
+              -p 5000:8080 \
+              -e "ConnectionStrings__DefaultConnection=Host=migraine-db;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+              ${IMAGE_NAME}:${BUILD_NUMBER}
+
+            sleep 5
+
+            # Frontend
+            docker run -d \
+              --name migraine_frontend \
+              --network migraine-net \
+              -p 5173:80 \
+              migraine-frontend:latest
+
+            sleep 10
+
+            echo "=== Running containers ==="
+            docker ps
+
+            echo "=== Backend logs ==="
+            docker logs migraine-backend || true
+
+            echo "=== Frontend logs ==="
+            docker logs migraine_frontend || true
+        '''
+    }
+}
 
         // ✅ Only run if you ACTUALLY have tests
      /*stage('Integration Tests') {
@@ -171,15 +192,13 @@ pipeline {
     }
 
    post {
-    always {
-        sh '''
-            docker run --rm \
-              --volumes-from devops-jenkins-1 \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
-              docker/compose:latest \
-              down || true
-        '''
+        always {
+            sh '''
+                docker rm -f migraine-backend || true
+                docker rm -f migraine-db || true
+                docker rm -f migraine_frontend || true
+                docker network rm migraine-net || true
+            '''
+        }
     }
-}
 }
