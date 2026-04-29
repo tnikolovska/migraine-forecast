@@ -106,12 +106,13 @@ pipeline {
             sleep 5
 
             # Backend
-            docker run -d \
-              --name migraine-backend \
-              --network migraine-net \
-              -p 5000:8080 \
-              -e "ConnectionStrings__DefaultConnection=Host=migraine-db;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
-              ${IMAGE_NAME}:${BUILD_NUMBER}
+           docker run -d \
+            --name migraine-backend \
+            --network migraine-net \
+            -p 5000:8080 \
+            -e "ConnectionStrings__DefaultConnection=Host=migraine-db;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+            -e "ConnectionStrings__Default=Host=migraine-db;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+            ${IMAGE_NAME}:${BUILD_NUMBER}
 
             sleep 5
 
@@ -123,6 +124,9 @@ pipeline {
               migraine-frontend:latest
 
             sleep 10
+
+
+            docker ps -a | grep migraine-backend || true
 
             echo "=== Running containers ==="
             docker ps
