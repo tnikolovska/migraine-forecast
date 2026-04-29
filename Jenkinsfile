@@ -80,17 +80,16 @@ pipeline {
         stage('Run Services') {
             steps {
                 sh '''
-                    docker rm -f migraineapi-app-container || true
-
                     docker run -d \
                     --name migraineapi-app-container \
                     -p 5050:80 \
-                    -e ConnectionStrings__DefaultConnection="Host=host.docker.internal;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+                    -e "ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
                     ${IMAGE_NAME}:${BUILD_NUMBER}
 
                     sleep 10
 
                     docker ps | grep migraineapi-app-container
+                    docker logs migraineapi-app-container || true
                 '''
             }
         }
