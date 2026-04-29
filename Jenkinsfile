@@ -78,7 +78,7 @@ pipeline {
         }
 
         // ✅ Only run if you ACTUALLY have tests
-     stage('Integration Tests') {
+     /*stage('Integration Tests') {
             steps {
                 sh '''
                     set -e
@@ -99,7 +99,28 @@ pipeline {
                         dotnet test "$TEST_PROJECT" -c Release
                 '''
             }
+        }*/
+
+        stage('Integration Tests') {
+            steps {
+                sh '''
+                    set -e
+
+                    TEST_PROJECT=$(find . -name "*Tests*.csproj" | head -n 1)
+
+                    echo "Detected test project: $TEST_PROJECT"
+
+                    docker run --rm \
+                        --volumes-from devops-jenkins-1 \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -e DOCKER_HOST=unix:///var/run/docker.sock \
+                        -w "$WORKSPACE" \
+                        mcr.microsoft.com/dotnet/sdk:9.0 \
+                        dotnet test "$TEST_PROJECT" -c Release
+                '''
+            }
         }
+
 
 
         stage('Push to Nexus') {
