@@ -80,24 +80,29 @@ pipeline {
       stage('Run Services') {
             steps {
                 sh '''
-                    echo "=== DEBUG: WORKSPACE CONTENT ==="
-                    ls -la $WORKSPACE
-
                     docker run --rm \
+                    --volumes-from devops-jenkins-1 \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$WORKSPACE":/workspace \
-                    -w /workspace \
+                    -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
                     docker/compose:1.29.2 \
                     down || true
 
                     docker run --rm \
+                    --volumes-from devops-jenkins-1 \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$WORKSPACE":/workspace \
-                    -w /workspace \
+                    -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
                     -e IMAGE_NAME=${IMAGE_NAME} \
                     -e BUILD_NUMBER=${BUILD_NUMBER} \
                     docker/compose:1.29.2 \
                     up -d
+
+                    sleep 10
+
+                    echo "=== Running containers ==="
+                    docker ps
+
+                    echo "=== API logs ==="
+                    docker logs migraineapi-app-container || true
                 '''
             }
         }
@@ -165,16 +170,16 @@ pipeline {
         }
     }
 
-    post {
-            always {
-                sh '''
-                    docker run --rm \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$WORKSPACE":/workspace \
-                    -w /workspace \
-                    docker/compose:1.29.2 \
-                    down || true
-                '''
-            }
-        }
+   post {
+    always {
+        sh '''
+            docker run --rm \
+              --volumes-from devops-jenkins-1 \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
+              docker/compose:1.29.2 \
+              down || true
+        '''
+    }
+}
 }
