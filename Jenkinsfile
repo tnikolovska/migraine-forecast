@@ -116,6 +116,7 @@ pipeline {
                         -e DOCKER_HOST=unix:///var/run/docker.sock \
                         -e TESTCONTAINERS_RYUK_DISABLED=true \
                         -e TESTCONTAINERS_CHECKS_DISABLE=true \
+                        -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal \
                         -w "$WORKSPACE" \
                         mcr.microsoft.com/dotnet/sdk:9.0 \
                         dotnet test "$TEST_PROJECT" -c Release
