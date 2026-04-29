@@ -126,15 +126,17 @@ pipeline {
 
 
         stage('Push to Nexus') {
-                steps {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     sh '''
                         docker tag migraineapi-app:${BUILD_NUMBER} host.docker.internal:5001/migraineapi-app:${BUILD_NUMBER}
 
-                        echo "YOUR_NEXUS_PASSWORD" | docker login host.docker.internal:5001 -u admin --password-stdin
+                        echo "$NEXUS_PASS" | docker login host.docker.internal:5001 -u "$NEXUS_USER" --password-stdin
 
                         docker push host.docker.internal:5001/migraineapi-app:${BUILD_NUMBER}
                     '''
                 }
+            }
         }
     }
 
