@@ -80,9 +80,9 @@ pipeline {
        stage('Run Services') {
             steps {
                 sh '''
-                    docker compose down || true
+                    docker-compose down || true
 
-                    IMAGE_NAME=${IMAGE_NAME} BUILD_NUMBER=${BUILD_NUMBER} docker compose up -d
+                    IMAGE_NAME=${IMAGE_NAME} BUILD_NUMBER=${BUILD_NUMBER} docker-compose up -d
 
                     sleep 10
 
