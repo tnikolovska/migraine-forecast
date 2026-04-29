@@ -126,17 +126,15 @@ pipeline {
 
 
         stage('Push to Nexus') {
-            steps {
-                sh '''
-                docker login $REGISTRY -u admin -p Securityobjectives1!
+                steps {
+                    sh '''
+                        docker tag migraineapi-app:${BUILD_NUMBER} host.docker.internal:5001/migraineapi-app:${BUILD_NUMBER}
 
-                docker tag ${IMAGE_NAME}:${BUILD_NUMBER} $REGISTRY/${IMAGE_NAME}:${BUILD_NUMBER}
-                docker tag ${IMAGE_NAME}:${BUILD_NUMBER} $REGISTRY/${IMAGE_NAME}:latest
+                        echo "YOUR_NEXUS_PASSWORD" | docker login host.docker.internal:5001 -u admin --password-stdin
 
-                docker push $REGISTRY/${IMAGE_NAME}:${BUILD_NUMBER}
-                docker push $REGISTRY/${IMAGE_NAME}:latest
-                '''
-            }
+                        docker push host.docker.internal:5001/migraineapi-app:${BUILD_NUMBER}
+                    '''
+                }
         }
     }
 
