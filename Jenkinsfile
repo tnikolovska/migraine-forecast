@@ -92,13 +92,11 @@ pipeline {
                         exit 1
                     fi
 
-                    echo "=== Running tests ==="
-
                     docker run --rm \
-                        -v "$WORKSPACE:/src" \
-                        -w /src \
+                        --volumes-from devops-jenkins-1 \
+                        -w "$WORKSPACE" \
                         mcr.microsoft.com/dotnet/sdk:9.0 \
-                        bash -c "ls -la /src && dotnet test /src/${TEST_PROJECT#./} -c Release"
+                        dotnet test "$TEST_PROJECT" -c Release
                 '''
             }
         }
