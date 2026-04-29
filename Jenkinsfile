@@ -80,6 +80,9 @@ pipeline {
       stage('Run Services') {
             steps {
                 sh '''
+                    echo "=== DEBUG: WORKSPACE CONTENT ==="
+                    ls -la $WORKSPACE
+
                     docker run --rm \
                     -v /var/run/docker.sock:/var/run/docker.sock \
                     -v "$WORKSPACE":/workspace \
@@ -95,14 +98,6 @@ pipeline {
                     -e BUILD_NUMBER=${BUILD_NUMBER} \
                     docker/compose:1.29.2 \
                     up -d
-
-                    sleep 10
-
-                    echo "=== Running containers ==="
-                    docker ps
-
-                    echo "=== API logs ==="
-                    docker logs migraineapi-app-container || true
                 '''
             }
         }
