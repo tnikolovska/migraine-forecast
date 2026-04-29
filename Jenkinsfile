@@ -78,31 +78,22 @@ pipeline {
         }*/
 
         stage('Run Services') {
-                steps {
-                    sh '''
-                        docker rm -f migraineapi-app-container || true
+            steps {
+                sh '''
+                    docker rm -f migraineapi-app-container || true
 
-                        docker run -d \
-                        --name migraineapi-app-container \
-                        -p 5050:80 \
-                        ${IMAGE_NAME}:${BUILD_NUMBER}
+                    docker run -d \
+                    --name migraineapi-app-container \
+                    -p 5050:80 \
+                    -e ConnectionStrings__DefaultConnection="Host=host.docker.internal;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+                    ${IMAGE_NAME}:${BUILD_NUMBER}
 
-                        sleep 10
+                    sleep 10
 
-                        echo "=== Running containers ==="
-                        docker ps
-
-                        echo "=== All containers ==="
-                        docker ps -a | grep migraineapi-app-container || true
-
-                        echo "=== Container logs ==="
-                        docker logs migraineapi-app-container || true
-
-                        echo "=== Container inspect status ==="
-                        docker inspect migraineapi-app-container --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}} Error={{.State.Error}}'
-                    '''
-                }
+                    docker ps | grep migraineapi-app-container
+                '''
             }
+        }
 
         // ✅ Only run if you ACTUALLY have tests
      /*stage('Integration Tests') {
