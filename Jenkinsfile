@@ -77,23 +77,19 @@ pipeline {
             }
         }*/
 
-        stage('Run Services') {
+       stage('Run Services') {
             steps {
                 sh '''
-                    docker rm -f migraineapi-app-container || true
+                    docker compose down || true
 
-                    docker run -d \
-                    --name migraineapi-app-container \
-                    -p 5050:80 \
-                    -e "ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
-                    ${IMAGE_NAME}:${BUILD_NUMBER}
+                    IMAGE_NAME=${IMAGE_NAME} BUILD_NUMBER=${BUILD_NUMBER} docker compose up -d
 
                     sleep 10
 
                     echo "=== Running containers ==="
-                    docker ps | grep migraineapi-app-container || true
+                    docker compose ps
 
-                    echo "=== Container logs ==="
+                    echo "=== API logs ==="
                     docker logs migraineapi-app-container || true
                 '''
             }
@@ -165,8 +161,7 @@ pipeline {
     post {
         always {
             sh '''
-            docker stop migraineapi-app-container || true
-            docker rm migraineapi-app-container || true
+                docker compose down || true
             '''
         }
     }
