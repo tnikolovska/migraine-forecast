@@ -64,7 +64,7 @@ pipeline {
             }
         }
 
-        stage('Run Services') {
+       /* stage('Run Services') {
             steps {
                 sh '''
                 docker run -d \
@@ -75,7 +75,34 @@ pipeline {
                 sleep 10
                 '''
             }
-        }
+        }*/
+
+        stage('Run Services') {
+                steps {
+                    sh '''
+                        docker rm -f migraineapi-app-container || true
+
+                        docker run -d \
+                        --name migraineapi-app-container \
+                        -p 5050:80 \
+                        ${IMAGE_NAME}:${BUILD_NUMBER}
+
+                        sleep 10
+
+                        echo "=== Running containers ==="
+                        docker ps
+
+                        echo "=== All containers ==="
+                        docker ps -a | grep migraineapi-app-container || true
+
+                        echo "=== Container logs ==="
+                        docker logs migraineapi-app-container || true
+
+                        echo "=== Container inspect status ==="
+                        docker inspect migraineapi-app-container --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}} Error={{.State.Error}}'
+                    '''
+                }
+            }
 
         // ✅ Only run if you ACTUALLY have tests
      /*stage('Integration Tests') {
