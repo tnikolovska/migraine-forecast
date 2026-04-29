@@ -77,6 +77,14 @@ pipeline {
             }
         }*/
 
+    stage('Build Frontend') {
+        steps {
+            sh '''
+                docker build -t migraine-frontend:latest ./frontend/migraine-frontend
+            '''
+        }
+    }
+
     stage('Run Services') {
     steps {
         sh '''
