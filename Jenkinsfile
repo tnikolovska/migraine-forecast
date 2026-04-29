@@ -77,14 +77,14 @@ pipeline {
             }
         }*/
 
-      stage('Run Services') {
+     stage('Run Services') {
             steps {
                 sh '''
                     docker run --rm \
                     --volumes-from devops-jenkins-1 \
                     -v /var/run/docker.sock:/var/run/docker.sock \
                     -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
-                    docker/compose:1.29.2 \
+                    docker/compose:latest \
                     down || true
 
                     docker run --rm \
@@ -93,7 +93,7 @@ pipeline {
                     -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
                     -e IMAGE_NAME=${IMAGE_NAME} \
                     -e BUILD_NUMBER=${BUILD_NUMBER} \
-                    docker/compose:1.29.2 \
+                    docker/compose:latest \
                     up -d
 
                     sleep 10
@@ -177,7 +177,7 @@ pipeline {
               --volumes-from devops-jenkins-1 \
               -v /var/run/docker.sock:/var/run/docker.sock \
               -w /var/jenkins_home/workspace/migraineapi-multibranch_main \
-              docker/compose:1.29.2 \
+              docker/compose:latest \
               down || true
         '''
     }
