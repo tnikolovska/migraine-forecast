@@ -101,7 +101,7 @@ pipeline {
             }
         }*/
 
-        stage('Integration Tests') {
+       stage('Integration Tests') {
             steps {
                 sh '''
                     set -e
@@ -114,13 +114,14 @@ pipeline {
                         --volumes-from devops-jenkins-1 \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         -e DOCKER_HOST=unix:///var/run/docker.sock \
+                        -e TESTCONTAINERS_RYUK_DISABLED=true \
+                        -e TESTCONTAINERS_CHECKS_DISABLE=true \
                         -w "$WORKSPACE" \
                         mcr.microsoft.com/dotnet/sdk:9.0 \
                         dotnet test "$TEST_PROJECT" -c Release
                 '''
             }
         }
-
 
 
         stage('Push to Nexus') {
