@@ -80,6 +80,8 @@ pipeline {
         stage('Run Services') {
             steps {
                 sh '''
+                    docker rm -f migraineapi-app-container || true
+
                     docker run -d \
                     --name migraineapi-app-container \
                     -p 5050:80 \
@@ -88,7 +90,10 @@ pipeline {
 
                     sleep 10
 
-                    docker ps | grep migraineapi-app-container
+                    echo "=== Running containers ==="
+                    docker ps | grep migraineapi-app-container || true
+
+                    echo "=== Container logs ==="
                     docker logs migraineapi-app-container || true
                 '''
             }
