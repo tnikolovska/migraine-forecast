@@ -77,17 +77,29 @@ pipeline {
             }
         }*/
 
-       stage('Run Services') {
+      stage('Run Services') {
             steps {
                 sh '''
-                    docker-compose down || true
+                    docker run --rm \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    -v "$PWD":/workspace \
+                    -w /workspace \
+                    docker/compose:1.29.2 \
+                    down || true
 
-                    IMAGE_NAME=${IMAGE_NAME} BUILD_NUMBER=${BUILD_NUMBER} docker-compose up -d
+                    docker run --rm \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    -v "$PWD":/workspace \
+                    -w /workspace \
+                    -e IMAGE_NAME=${IMAGE_NAME} \
+                    -e BUILD_NUMBER=${BUILD_NUMBER} \
+                    docker/compose:1.29.2 \
+                    up -d
 
                     sleep 10
 
                     echo "=== Running containers ==="
-                    docker compose ps
+                    docker ps
 
                     echo "=== API logs ==="
                     docker logs migraineapi-app-container || true
@@ -159,10 +171,15 @@ pipeline {
     }
 
     post {
-        always {
-            sh '''
-                docker compose down || true
-            '''
+            always {
+                sh '''
+                    docker run --rm \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    -v "$PWD":/workspace \
+                    -w /workspace \
+                    docker/compose:1.29.2 \
+                    down || true
+                '''
+            }
         }
-    }
 }
