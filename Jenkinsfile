@@ -82,14 +82,14 @@ pipeline {
                 sh '''
                     docker run --rm \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$PWD":/workspace \
+                    -v "$WORKSPACE":/workspace \
                     -w /workspace \
                     docker/compose:1.29.2 \
                     down || true
 
                     docker run --rm \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$PWD":/workspace \
+                    -v "$WORKSPACE":/workspace \
                     -w /workspace \
                     -e IMAGE_NAME=${IMAGE_NAME} \
                     -e BUILD_NUMBER=${BUILD_NUMBER} \
@@ -175,7 +175,7 @@ pipeline {
                 sh '''
                     docker run --rm \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v "$PWD":/workspace \
+                    -v "$WORKSPACE":/workspace \
                     -w /workspace \
                     docker/compose:1.29.2 \
                     down || true
