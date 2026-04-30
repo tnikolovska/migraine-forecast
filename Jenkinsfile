@@ -213,8 +213,13 @@ pipeline {
                 docker run -d \
                 --name nginx-lb \
                 -p 80:80 \
-                -v "$WORKSPACE/nginx.conf:/etc/nginx/nginx.conf:ro" \
                 nginx:alpine
+
+                sleep 3
+
+                docker cp nginx.conf nginx-lb:/etc/nginx/nginx.conf
+
+                docker exec nginx-lb nginx -s reload
                 '''
             }
         }
