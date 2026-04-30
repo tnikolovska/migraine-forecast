@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "migraineapi-app"
         REGISTRY = "host.docker.internal:5001"
+        APP_NAME = "migraineapi-app"
     }
 
     stages {
@@ -201,16 +202,113 @@ pipeline {
                 }
             }
         }
+
+        //Blue-Green Deployment
+
+        stage('Start Nginx Load Balancer') {
+            steps {
+                sh '''
+                docker rm -f nginx-lb || true
+
+                docker run -d \
+                --name nginx-lb \
+                -p 80:80 \
+                -v "$WORKSPACE/nginx.conf:/etc/nginx/nginx.conf:ro" \
+                nginx:alpine
+                '''
+            }
+        }
+
+        stage('Determine Target Color') {
+            steps {
+                script {
+                    // Проверка што работи моментално
+                    def running = sh(script: "docker ps --format '{{.Names}}'", returnStdout: true).trim()
+                    
+                    if (running.contains("${APP_NAME}-blue")) {
+                        env.TARGET_COLOR = "green"
+                        env.OLD_COLOR = "blue"
+                        env.TARGET_PORT = "5052"
+                        env.OLD_PORT = "5051"
+                    } else {
+                        env.TARGET_COLOR = "blue"
+                        env.OLD_COLOR = "green"
+                        env.TARGET_PORT = "5051"
+                        env.OLD_PORT = "5052"
+                    }
+                    echo "Deploying to ${env.TARGET_COLOR} on port ${env.TARGET_PORT}. Current active is ${env.OLD_COLOR}."
+                }
+            }
+        }
+
+        stage('Deploy to Inactive Environment') {
+            steps {
+                // Пуштање на новата верзија (од Nexus) на неактивната порта
+                sh "docker run -d --name ${APP_NAME}-${env.TARGET_COLOR} -p ${env.TARGET_PORT}:8080 ${REGISTRY}/${APP_NAME}:${env.BUILD_NUMBER}"
+                echo "Waiting for application to start..."
+                sh 'sleep 15' 
+            }
+        }
+
+        stage('Switch Traffic (Nginx Reload)') {
+            steps {
+                script {
+                    // Го менуваме upstream во nginx.conf од старата порта на новата порта
+                    // ПРЕДУПРЕДУВАЊЕ: Осигурај се дека во nginx.conf почетната порта се совпаѓа со OLD_PORT
+                    /*sh "sed -i 's/:${env.OLD_PORT}/:${env.TARGET_PORT}/g' ./nginx.conf"
+                    
+                    // Копирање на новиот конф и релоад
+                    sh "docker cp ./nginx.conf nginx-lb:/etc/nginx/nginx.conf"
+                    sh "docker exec nginx-lb nginx -s reload"
+                    
+                    echo "Traffic successfully switched to ${env.TARGET_COLOR}"*/
+
+                    // Менуваме директно ВНАТРЕ во контејнерот за да го избегнеме "device busy" на хостот
+                    // 1. Прво го копираме локалниот nginx.conf во контејнерот (овој пат ќе дозволи бидејќи нема -v)
+                    sh "docker cp ./nginx.conf nginx-lb:/etc/nginx/nginx.conf"
+
+                    // 2. Сега го извршуваме sed внатре во контејнерот врз копираниот фајл
+                    sh "docker exec nginx-lb sed -i 's/:${env.OLD_PORT}/:${env.TARGET_PORT}/g' /etc/nginx/nginx.conf"
+            
+                    // 3. Релоад
+                    sh "docker exec nginx-lb nginx -s reload"
+            
+                    echo "Traffic successfully switched to ${env.TARGET_COLOR}"
+                }
+            }
+        }
+
+        stage('Cleanup Old Version') {
+            steps {
+                script {
+                    // Сега кога сообраќајот е префрлен, ја гасиме претходната верзија
+                    echo "Stopping old version: ${APP_NAME}-${env.OLD_COLOR}"
+                    sh "docker stop ${APP_NAME}-${env.OLD_COLOR} || true"
+                    sh "docker rm ${APP_NAME}-${env.OLD_COLOR} || true"
+                }
+            }
+        }
+
+
     }
 
    post {
         always {
             sh '''
                 docker rm -f migraine-backend || true
-                docker rm -f migraine-db || true
+                # docker rm -f migraine-db || true
                 docker rm -f migraine_frontend || true
-                docker network rm migraine-net || true
+                # docker network rm migraine-net || true
             '''
+        }
+
+        failure {
+            script {
+                // Ако нешто падне за време на пајплајнот, избриши го неуспешниот TARGET контејнер
+                echo "Deployment failed. Cleaning up targeted container..."
+                sh "docker stop ${APP_NAME}-${env.TARGET_COLOR} || true"
+                sh "docker rm ${APP_NAME}-${env.TARGET_COLOR} || true"
+            }
         }
     }
 }
