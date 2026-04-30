@@ -249,16 +249,28 @@ pipeline {
         stage('Deploy to Inactive Environment') {
             steps {
                 sh '''
-                    # Remove target container if exists
+                    echo "Deploying ${TARGET_COLOR}..."
+
+                    # Remove old container if exists
                     docker rm -f migraineapi-app-${TARGET_COLOR} || true
 
+                    # Run new version
                     docker run -d \
                     --name migraineapi-app-${TARGET_COLOR} \
+                    --network migraine-net \
                     -p ${TARGET_PORT}:8080 \
-                    ${IMAGE_NAME}:${BUILD_NUMBER}
+                    -e "ConnectionStrings__DefaultConnection=Host=migraine-db;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+                    -e "ConnectionStrings__Default=Host=migraine-db;Port=5432;Database=migraine_db;Username=postgres;Password=password" \
+                    ${REGISTRY}/${APP_NAME}:${BUILD_NUMBER}
 
                     echo "Waiting for application to start..."
                     sleep 15
+
+                    echo "=== Container status ==="
+                    docker ps -a | grep migraineapi-app-${TARGET_COLOR} || true
+
+                    echo "=== Container logs ==="
+                    docker logs migraineapi-app-${TARGET_COLOR} || true
                 '''
             }
         }
