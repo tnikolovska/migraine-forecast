@@ -248,10 +248,18 @@ pipeline {
 
         stage('Deploy to Inactive Environment') {
             steps {
-                // Пуштање на новата верзија (од Nexus) на неактивната порта
-                sh "docker run -d --name ${APP_NAME}-${env.TARGET_COLOR} -p ${env.TARGET_PORT}:8080 ${REGISTRY}/${APP_NAME}:${env.BUILD_NUMBER}"
-                echo "Waiting for application to start..."
-                sh 'sleep 15' 
+                sh '''
+                    # Remove target container if exists
+                    docker rm -f migraineapi-app-${TARGET_COLOR} || true
+
+                    docker run -d \
+                    --name migraineapi-app-${TARGET_COLOR} \
+                    -p ${TARGET_PORT}:8080 \
+                    ${IMAGE_NAME}:${BUILD_NUMBER}
+
+                    echo "Waiting for application to start..."
+                    sleep 15
+                '''
             }
         }
 
