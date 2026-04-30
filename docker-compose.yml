@@ -15,13 +15,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    image: ${IMAGE_NAME:-migraineapi-app}:${BUILD_NUMBER:-latest}
+    build:
+      context: ./backend/MigraineForecast.API
+      dockerfile: Dockerfile
     container_name: migraine-backend
     depends_on:
       - db
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=migraine_db;Username=postgres;Password=password
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=migraine_db;Username=postgres;Password=password
     ports:
       - "5000:8080"
 
