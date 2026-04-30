@@ -322,7 +322,7 @@ pipeline {
             sh '''
                 docker rm -f migraine-backend || true
                 # docker rm -f migraine-db || true
-                docker rm -f migraine_frontend || true
+                # docker rm -f migraine_frontend || true
                 # docker network rm migraine-net || true
             '''
         }
