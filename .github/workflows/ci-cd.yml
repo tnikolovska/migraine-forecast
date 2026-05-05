@@ -1,0 +1,113 @@
+name: CI/CD Multi-Service App
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore backend
+        run: dotnet restore backend/MigraineForecast.API/MigraineForecast.API.csproj
+
+      - name: Build backend
+        run: dotnet build backend/MigraineForecast.API/MigraineForecast.API.csproj --no-restore
+
+      - name: Run backend tests
+        run: dotnet test --no-build
+        continue-on-error: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: frontend/migraine-frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend/migraine-frontend
+        run: npm run build
+
+  docker-build-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/MigraineForecast.API
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/migraine-backend:latest
+            ghcr.io/${{ github.repository_owner }}/migraine-backend:${{ github.sha }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend/migraine-frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/migraine-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/migraine-frontend:${{ github.sha }}
+
+  deploy-dev:
+    if: github.ref == 'refs/heads/develop'
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Deploy to Dev
+        run: |
+          echo "Deploying to DEV environment..."
+          echo "Pull latest backend/frontend images from GHCR"
+          echo "Run docker compose on dev server"
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy to Production
+        run: |
+          echo "Deploying to PRODUCTION environment..."
+          echo "This job can require manual approval in GitHub Environments"
