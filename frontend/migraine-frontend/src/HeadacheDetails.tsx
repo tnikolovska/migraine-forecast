@@ -19,6 +19,7 @@ interface HealthCondition {
 const HeadacheDetails = () => {
   const [conditions, setConditions] = useState<HealthCondition[]>([]);
   const [loading, setLoading] = useState(true);
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     // Promenio sam URL da sklonim /1 ako želiš da povučeš sve iz baze
@@ -72,9 +73,11 @@ const HeadacheDetails = () => {
               <h2 className="h3 fw-bold text-primary mb-2">{condition.name}</h2>
               <p className="text-muted mb-0">{condition.description}</p>
             </div>
+            {role === "Admin" && (
             <Link to={`/admin/update-condition/1`} className="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm">
               Edit ✏️
             </Link>
+            )}
           </div>
           
           <div className="card-body p-4">

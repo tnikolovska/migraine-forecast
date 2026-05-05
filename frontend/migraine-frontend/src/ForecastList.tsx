@@ -16,6 +16,7 @@ const ForecastList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const role = localStorage.getItem("role");
    const navigate = useNavigate();
 
   useEffect(() => {
@@ -119,6 +120,7 @@ const ForecastList = () => {
                     </td>
                     <td className="text-muted w-50">{symptom.description}</td>
                     <td className="px-4 py-3">
+                      {role === "Admin" && (
                       <button
                       className="btn btn-primary btn-sm"
                      
@@ -126,7 +128,7 @@ const ForecastList = () => {
                     >
                       Edit
                     </button>
-
+                      )}
                     </td>
                   </tr>
                 ))
