@@ -38,7 +38,7 @@ jobs:
         run: dotnet build backend/MigraineForecast.API/MigraineForecast.API.csproj --no-restore
 
       - name: Run backend tests
-        run: dotnet test --no-build
+        run: dotnet test backend/MigraineForecastAPI.Tests/MigraineForecastAPI.Tests.csproj
         continue-on-error: false
 
       - name: Setup Node.js
