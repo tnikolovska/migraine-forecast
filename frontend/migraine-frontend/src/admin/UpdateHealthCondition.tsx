@@ -39,8 +39,17 @@ export const UpdateHealthCondition = () => {
     };
 
     try {
+      const token = localStorage.getItem("token");
       //await axios.put(`http://localhost:5000/api/healthcondition/${id}`, updatedCondition);
-      await axios.put(`/api/healthcondition/${id}`, updatedCondition);
+      await axios.put(`/api/healthcondition/${id}`, updatedCondition,
+            {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  }
+
+
+      );
       alert("Condition updated successfully! 🔄");
       navigate('/migraineHeadacheDetails'); // Redirect back to details page
     } catch (err) {

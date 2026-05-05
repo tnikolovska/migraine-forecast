@@ -81,13 +81,20 @@ const [type, setType] = useState<string>(MigrainePhase.BeforeHeadache);
     setSaving(true);
 
     try {
+      const token = localStorage.getItem("token");
       //await axios.put(`http://localhost:5000/api/symptom/${id}`, {
       await axios.put(`/api/symptom/${id}`, {
         name,
         description,
         healthConditionId: Number(healthConditionId),
         type
-      });
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
       alert("Symptom updated successfully!");
       navigate("/");
