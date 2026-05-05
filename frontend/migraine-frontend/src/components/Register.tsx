@@ -26,8 +26,9 @@ const Register = () => {
 
     try {
       // PROVERI URL: Mora da se poklapa sa tvojim backend portom u Dockeru
-      const response = await axios.post("http://localhost:5000/api/auth/register", {
-        username: username,
+      //const response = await axios.post("http://localhost:5000/api/auth/register", {
+      const response = await axios.post("/api/auth/register", {  
+       username: username,
         password: password,
       });
 

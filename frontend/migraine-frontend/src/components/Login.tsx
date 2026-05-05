@@ -18,7 +18,8 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/login", // CHANGE to your API URL
+        //"http://localhost:5000/api/auth/login", // CHANGE to your API URL
+        "/api/auth/login",
         {
           username,
           password,
