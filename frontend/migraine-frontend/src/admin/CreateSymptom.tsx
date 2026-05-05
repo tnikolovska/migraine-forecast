@@ -61,13 +61,20 @@ const AssignSymptom = () => {
     setSubmitting(true);
 
     try {
+      const token = localStorage.getItem("token");
       //await axios.post("http://localhost:5000/api/symptom", {
       await axios.post("/api/symptom", {
         name: symptomName,
         description: description,
         healthConditionId: selectedConditionId,
         type: String(phase), // ✅ send enum as number
-      });
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
       alert("✅ Symptom assigned successfully!");
 
