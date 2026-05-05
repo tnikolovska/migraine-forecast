@@ -17,7 +17,8 @@ export const CreateHealthCondition = () => {
 
     try {
       // Proveri da li je ruta /api/healthcondition ili /api/healthconditions (množina)
-      await axios.post('http://localhost:5000/api/healthcondition', newCondition);
+      //await axios.post('http://localhost:5000/api/healthcondition', newCondition);
+      await axios.post('/api/healthcondition', newCondition);
       alert("Health Condition created successfully! 🏥");
       setName('');
       setDescription('');

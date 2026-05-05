@@ -20,7 +20,8 @@ const ForecastList = () => {
 
   useEffect(() => {
     let isMounted = true;
-    axios.get('http://localhost:5000/api/symptom')
+    //axios.get('http://localhost:5000/api/symptom')
+    axios.get('/api/symptom')
       .then((response: AxiosResponse) => {
         if (isMounted) {
           setItems(response.data);

@@ -18,7 +18,8 @@ const AssignHealthCondition = () => {
     const fetchConditions = async () => {
       try {
         const res = await axios.get<HealthCondition[]>(
-          "http://localhost:5000/api/healthcondition"
+          //"http://localhost:5000/api/healthcondition"
+          "/api/healthcondition"
         );
 
         setConditions(res.data);

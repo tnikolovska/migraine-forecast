@@ -27,7 +27,8 @@ const UserSymptomSelection = () => {
   // Load symptoms
   useEffect(() => {
     axios
-      .get<Symptom[]>("http://localhost:5000/api/symptom")
+      //.get<Symptom[]>("http://localhost:5000/api/symptom")
+      .get<Symptom[]>("/api/symptom")
       .then((res) => setSymptoms(res.data))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -95,7 +96,8 @@ const UserSymptomSelection = () => {
         const token = localStorage.getItem("token");
 
         await axios.post(
-          "http://localhost:5000/api/usersymptomselection",
+          //"http://localhost:5000/api/usersymptomselection",
+           "/api/usersymptomselection",
           { symptomIds: selected },
           {
             headers: {

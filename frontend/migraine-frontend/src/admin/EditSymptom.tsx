@@ -45,8 +45,10 @@ const [type, setType] = useState<string>(MigrainePhase.BeforeHeadache);
     const fetchData = async () => {
       try {
         const [conditionsRes, symptomRes] = await Promise.all([
-          axios.get<HealthCondition[]>("http://localhost:5000/api/healthcondition"),
-          axios.get<SymptomDto>(`http://localhost:5000/api/symptom/${id}`)
+          //axios.get<HealthCondition[]>("http://localhost:5000/api/healthcondition"),
+          axios.get<HealthCondition[]>("/api/healthcondition"),
+          //axios.get<SymptomDto>(`http://localhost:5000/api/symptom/${id}`)
+          axios.get<SymptomDto>(`/api/symptom/${id}`)
         ]);
         console.log(symptomRes.data);
         setConditions(conditionsRes.data);
@@ -79,7 +81,8 @@ const [type, setType] = useState<string>(MigrainePhase.BeforeHeadache);
     setSaving(true);
 
     try {
-      await axios.put(`http://localhost:5000/api/symptom/${id}`, {
+      //await axios.put(`http://localhost:5000/api/symptom/${id}`, {
+      await axios.put(`/api/symptom/${id}`, {
         name,
         description,
         healthConditionId: Number(healthConditionId),

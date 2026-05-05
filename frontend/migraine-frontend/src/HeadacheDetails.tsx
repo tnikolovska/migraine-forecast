@@ -23,7 +23,8 @@ const HeadacheDetails = () => {
   useEffect(() => {
     // Promenio sam URL da sklonim /1 ako želiš da povučeš sve iz baze
     // Ako želiš samo jedan, vrati /1 na kraj
-    axios.get('http://localhost:5000/api/healthcondition/1')
+    //axios.get('http://localhost:5000/api/healthcondition/1')
+    axios.get('/api/healthcondition/1')
       .then(res => {
         const data = Array.isArray(res.data) ? res.data : [res.data];
         setConditions(data);

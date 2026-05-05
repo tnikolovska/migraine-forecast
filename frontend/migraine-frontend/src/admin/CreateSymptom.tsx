@@ -34,7 +34,8 @@ const AssignSymptom = () => {
     const fetchConditions = async () => {
       try {
         const res = await axios.get<HealthCondition[]>(
-          "http://localhost:5000/api/healthcondition"
+          //"http://localhost:5000/api/healthcondition"
+          "/api/healthcondition"
         );
         setConditions(res.data);
         console.log("API RESPONSE:", res.data); // 👈 HERE
@@ -60,7 +61,8 @@ const AssignSymptom = () => {
     setSubmitting(true);
 
     try {
-      await axios.post("http://localhost:5000/api/symptom", {
+      //await axios.post("http://localhost:5000/api/symptom", {
+      await axios.post("/api/symptom", {
         name: symptomName,
         description: description,
         healthConditionId: selectedConditionId,

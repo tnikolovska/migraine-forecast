@@ -14,7 +14,8 @@ export const UpdateHealthCondition = () => {
 
   // 1. Fetch the existing data when the page loads
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/healthcondition/${id}`)
+    //axios.get(`http://localhost:5000/api/healthcondition/${id}`)
+    axios.get(`/api/healthcondition/${id}`)
       .then(res => {
         setName(res.data.name);
         setDescription(res.data.description);
@@ -38,7 +39,8 @@ export const UpdateHealthCondition = () => {
     };
 
     try {
-      await axios.put(`http://localhost:5000/api/healthcondition/${id}`, updatedCondition);
+      //await axios.put(`http://localhost:5000/api/healthcondition/${id}`, updatedCondition);
+      await axios.put(`/api/healthcondition/${id}`, updatedCondition);
       alert("Condition updated successfully! 🔄");
       navigate('/migraineHeadacheDetails'); // Redirect back to details page
     } catch (err) {
