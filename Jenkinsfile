@@ -5,6 +5,7 @@ pipeline {
         IMAGE_NAME = "migraineapi-app"
         REGISTRY = "host.docker.internal:5001"
         APP_NAME = "migraineapi-app"
+        TRAFFIC_SWITCHED = "false"
     }
 
     stages {
@@ -297,6 +298,10 @@ pipeline {
             
                     // 3. Релоад
                     sh "docker exec nginx-lb nginx -s reload"
+
+                    sh "docker exec nginx-lb nginx -t"
+
+                    env.TRAFFIC_SWITCHED = "true"
             
                     echo "Traffic successfully switched to ${env.TARGET_COLOR}"
                 }
@@ -307,9 +312,10 @@ pipeline {
             steps {
                 script {
                     // Сега кога сообраќајот е префрлен, ја гасиме претходната верзија
-                    echo "Stopping old version: ${APP_NAME}-${env.OLD_COLOR}"
+                   /* echo "Stopping old version: ${APP_NAME}-${env.OLD_COLOR}"
                     sh "docker stop ${APP_NAME}-${env.OLD_COLOR} || true"
-                    sh "docker rm ${APP_NAME}-${env.OLD_COLOR} || true"
+                    sh "docker rm ${APP_NAME}-${env.OLD_COLOR} || true"*/
+                     echo "Skipping old version cleanup to allow rollback."
                 }
             }
         }
@@ -330,10 +336,31 @@ pipeline {
         failure {
             script {
                 // Ако нешто падне за време на пајплајнот, избриши го неуспешниот TARGET контејнер
-                echo "Deployment failed. Cleaning up targeted container..."
+                /*echo "Deployment failed. Cleaning up targeted container..."
                 sh "docker stop ${APP_NAME}-${env.TARGET_COLOR} || true"
-                sh "docker rm ${APP_NAME}-${env.TARGET_COLOR} || true"
-            }
+                sh "docker rm ${APP_NAME}-${env.TARGET_COLOR} || true"*/
+
+
+                echo "Deployment failed. Starting rollback..."
+                 if (env.TRAFFIC_SWITCHED == "true") {
+                echo "Rollback: switching traffic back to ${env.OLD_COLOR} on port ${env.OLD_PORT}"
+
+                sh """
+                    docker exec nginx-lb sed -i 's/:${env.TARGET_PORT}/:${env.OLD_PORT}/g' /etc/nginx/nginx.conf
+                    docker exec nginx-lb nginx -s reload
+                """
+
+                echo "Rollback completed. Traffic is back to ${env.OLD_COLOR}"
+                } else {
+                    echo "Traffic was not switched yet, rollback is not needed."
+                }
+
+                 echo "Cleaning failed target container: ${APP_NAME}-${env.TARGET_COLOR}"
+                 sh "docker stop ${APP_NAME}-${env.TARGET_COLOR} || true"
+                 sh "docker rm ${APP_NAME}-${env.TARGET_COLOR} || true"
+
+                }
+               
         }
     }
 }
