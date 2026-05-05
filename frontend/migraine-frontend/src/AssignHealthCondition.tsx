@@ -50,7 +50,7 @@ const AssignHealthCondition = () => {
 
     try {
       const token = localStorage.getItem("token");
-
+      console.log("healthConditionId:", selectedId);
       await axios.post(
         //"http://localhost:5000/api/userhealthcondition",
         "/api/userhealthcondition",
