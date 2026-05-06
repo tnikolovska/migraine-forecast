@@ -101,13 +101,55 @@ jobs:
           echo "Run docker compose on dev server"
 
   deploy-prod:
-    if: github.ref == 'refs/heads/main'
-    needs: docker-build-push
-    runs-on: ubuntu-latest
-    environment: production
+  if: github.ref == 'refs/heads/main'
+  needs: docker-build-push
+  runs-on: ubuntu-latest
+  environment: production
 
-    steps:
-      - name: Deploy to Production
-        run: |
-          echo "Deploying to PRODUCTION environment..."
-          echo "This job can require manual approval in GitHub Environments"
+  steps:
+    - name: Deploy to production server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ${{ secrets.PROD_USER }}
+        key: ${{ secrets.PROD_SSH_KEY }}
+        script: |
+          docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
+
+          mkdir -p ~/migraine-forecast
+          cd ~/migraine-forecast
+
+          cat > docker-compose.prod.yml << 'EOF'
+          services:
+            db:
+              image: postgres:15
+              environment:
+                POSTGRES_DB: migraine_db
+                POSTGRES_USER: postgres
+                POSTGRES_PASSWORD: password
+              volumes:
+                - postgres_data:/var/lib/postgresql/data
+
+            backend:
+              image: ghcr.io/tnikolovska/migraine-backend:latest
+              depends_on:
+                - db
+              environment:
+                ASPNETCORE_ENVIRONMENT: Production
+                ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=migraine_db;Username=postgres;Password=password
+              ports:
+                - "5000:8080"
+
+            frontend:
+              image: ghcr.io/tnikolovska/migraine-frontend:latest
+              depends_on:
+                - backend
+              ports:
+                - "80:80"
+
+          volumes:
+            postgres_data:
+          EOF
+
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d
