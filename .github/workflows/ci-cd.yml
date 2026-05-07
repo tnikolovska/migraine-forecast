@@ -151,6 +151,7 @@ jobs:
             volumes:
               postgres_data:
             EOF
-
+            
+            export COMPOSE_HTTP_TIMEOUT=300
             docker-compose -f docker-compose.prod.yml pull
             docker-compose -f docker-compose.prod.yml up -d
