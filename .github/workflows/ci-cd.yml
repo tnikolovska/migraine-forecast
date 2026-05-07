@@ -88,17 +88,62 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/migraine-frontend:${{ github.sha }}
 
   deploy-dev:
-    if: github.ref == 'refs/heads/develop'
-    needs: docker-build-push
-    runs-on: ubuntu-latest
-    environment: dev
+  if: github.ref == 'refs/heads/develop'
+  needs: docker-build-push
+  runs-on: ubuntu-latest
+  environment: dev
 
-    steps:
-      - name: Deploy to Dev
-        run: |
-          echo "Deploying to DEV environment..."
-          echo "Pull latest backend/frontend images from GHCR"
-          echo "Run docker compose on dev server"
+  steps:
+    - name: Deploy to dev
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ${{ secrets.PROD_USER }}
+        key: ${{ secrets.PROD_SSH_KEY }}
+        passphrase: ${{ secrets.PROD_SSH_PASSPHRASE }}
+        script: |
+          docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
+
+          mkdir -p ~/migraine-forecast-dev
+          cd ~/migraine-forecast-dev
+
+          cat > docker-compose.dev.yml << 'EOF'
+          services:
+            db:
+              image: postgres:15
+              environment:
+                POSTGRES_DB: migraine_dev_db
+                POSTGRES_USER: postgres
+                POSTGRES_PASSWORD: password
+              volumes:
+                - postgres_dev_data:/var/lib/postgresql/data
+
+            backend:
+              image: ghcr.io/tnikolovska/migraine-backend:latest
+              depends_on:
+                - db
+              environment:
+                ASPNETCORE_ENVIRONMENT: Development
+                ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=migraine_dev_db;Username=postgres;Password=password
+              ports:
+                - "5001:8080"
+
+            frontend:
+              image: ghcr.io/tnikolovska/migraine-frontend:latest
+              depends_on:
+                - backend
+              ports:
+                - "8080:80"
+
+          volumes:
+            postgres_dev_data:
+          EOF
+
+          export COMPOSE_HTTP_TIMEOUT=300
+
+          docker-compose -f docker-compose.dev.yml pull
+          docker-compose -f docker-compose.dev.yml down
+          docker-compose -f docker-compose.dev.yml up -d
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
